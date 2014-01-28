@@ -1,6 +1,9 @@
 ngDefine('cockpit.plugin.base.views', function(module) {
+  function ucFirst(str) {
+    return str.slice(0, 1).toUpperCase() + str.slice(1);
+  }
 
-   function UserTaskController ($scope, search, TaskResource, Notifications) {
+  function UserTaskController ($scope, search, TaskResource, Notifications) {
 
     // input: processInstance, processData
 
@@ -80,65 +83,91 @@ ngDefine('cockpit.plugin.base.views', function(module) {
       return '#/process-instance/' + processInstance.id + '?activityInstanceIds=' + userTask.instance.id;
     };
 
-    $scope.editAssignee = function (userTask) {
-      userTask.inEditMode = true;
-    };
-
-    $scope.closeInPlaceEditing = function (userTask) {
-      delete userTask.inEditMode;
-
-      // clear the exception for the passed user task
-      taskIdIdToExceptionMessageMap[userTask.id] = null;
-
-      // reset the values of the copy
-      var copy = taskCopies[userTask.id];
-      angular.extend(copy, userTask);
-
-    };
-
     $scope.getCopy = function (userTaskId) {
       return taskCopies[userTaskId];
     };
 
-    var isValid = $scope.isValid = function (editAssigneeFrom) {
-      if (editAssigneeFrom.$invalid) {
+    var isValid = $scope.isValid = function (editForm) {
+      if (!editForm || editForm.$invalid) {
         return false;
       }
 
       return true;
     }
 
-    $scope.submit = function (editAssigneeFrom, userTask) {
-      if (!isValid(editAssigneeFrom)) {
-        return;
-      }
+    /*****************************************************\
+     * Assignee / Owner delegation forms                 *
+    \*****************************************************/
+    function delegationForm(target) {
+      var ucfTarget = ucFirst(target);
 
-      var copy = taskCopies[userTask.id],
-          defaultParams = {id: userTask.id},
-          params = {userId : copy.assignee};
+      $scope['edit'+ ucfTarget] = function (userTask) {
+        userTask['in'+ ucfTarget +'EditMode'] = true;
+      };
 
-      // If the value did not change then there is nothing to do!
-      if (userTask.assignee === copy.assignee) {
-        $scope.closeInPlaceEditing(userTask);
-        return;
-      }
+      $scope['closeInPlace'+ ucfTarget +'Editing'] = function (userTask) {
+        delete userTask['in'+ ucfTarget +'EditMode'];
 
-      TaskResource.setAssignee(defaultParams, params).$then(
+        // clear the exception for the passed user task
+        taskIdIdToExceptionMessageMap[userTask.id] = null;
 
-        // success
-        function (response) {
-          Notifications.addMessage({ status: 'Assignee', message: 'The assignee of the user task \'' + userTask.instance.name + '\' has been set to \'' + copy.assignee + '\' successfully.', duration: 5000 });
-          angular.extend(userTask, copy);
-          $scope.closeInPlaceEditing(userTask);
-        },
+        // reset the values of the copy
+        var copy = taskCopies[userTask.id];
+        angular.extend(copy, userTask);
+      };
 
-        // error
-        function (error) {
-          Notifications.addError({ status: 'Assignee', message: 'The assignee of the user task \'' + userTask.instance.name + '\' could not be set to \'' + copy.assignee + '\' successfully.', exclusive: true, duration: 5000 });
-          taskIdIdToExceptionMessageMap[userTask.id] = error.data;
+      $scope['submit'+ ucfTarget] = function (editForm, userTask) {
+        if (!isValid(editForm)) {
+          return;
         }
-      );
-    };
+
+        var copy = taskCopies[userTask.id],
+            defaultParams = {id: userTask.id},
+            params = {userId : copy[target]};
+
+        // If the value did not change then there is nothing to do!
+        if (userTask[target] === copy[target]) {
+          $scope['closeInPlace'+ ucfTarget +'Editing'](userTask);
+          return;
+        }
+
+        TaskResource['set'+ ucfTarget](defaultParams, params).$then(
+          // success
+          function (response) {
+            Notifications.addMessage({
+              status: ucfTarget,
+              message: 'The '+ target +' of the user task \'' +
+                       userTask.instance.name +
+                       '\' has been set to \'' +
+                       copy[target] + '\' successfully.',
+              duration: 5000
+            });
+            angular.extend(userTask, copy);
+            $scope['closeInPlace'+ ucfTarget +'Editing'](userTask);
+          },
+
+          // error
+          function (error) {
+            Notifications.addError({
+              status: ucfTarget,
+              message: 'The '+ target +' of the user task \'' +
+                       userTask.instance.name +
+                       '\' could not be set to \'' + copy[target] +
+                       '\' successfully.',
+              exclusive: true,
+              duration: 5000
+            });
+            taskIdIdToExceptionMessageMap[userTask.id] = error.data;
+          }
+        );
+      };
+    }
+
+    delegationForm('assignee');
+    delegationForm('owner');
+
+
+
 
     $scope.getExceptionForUserTask = function (userTask) {
       return taskIdIdToExceptionMessageMap[userTask.id];

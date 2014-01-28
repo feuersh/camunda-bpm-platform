@@ -13,23 +13,34 @@
     </tr>
   </thead>
   <tbody>
-    <tr ng-repeat="userTask in userTasks">
-      <td>
+    <tr class="task" ng-repeat="userTask in userTasks">
+      <td class="activity">
         <a ng-click="selectActivity(userTask.instance.id, $event)"
            ng-href="{{ getHref(userTask) }}">{{ userTask.instance.name || userTask.instance.id }}</a>
       </td>
-      <td>
-        <div ng-if="!userTask.inEditMode">
+
+      <td class="assignee">
+        <div ng-if="!userTask.inAssigneeEditMode">
           {{ userTask.assignee }}
           <span class="edit-toggle" ng-click="editAssignee(userTask)">
             <i class="icon-pencil"></i>
           </span>
         </div>
 
-        <form ng-if="userTask.inEditMode" class="inline-edit" name="editAssigneeFrom" ng-submit="submit(this.editAssigneeFrom, userTask)" novalidate request-aware>
+        <form ng-if="userTask.inAssigneeEditMode"
+              class="inline-edit"
+              name="editAssigneeForm"
+              ng-submit="submitAssignee(this.editAssigneeForm, userTask)"
+              novalidate
+              request-aware>
 
           <fieldset>
-            <input name="editAssignee" type="text" class="in-place-edit" ng-model="getCopy(userTask.id).assignee" autofocus required>
+            <input name="editAssignee"
+                   type="text"
+                   class="in-place-edit"
+                   ng-model="getCopy(userTask.id).assignee"
+                   autofocus
+                   required>
           </fieldset>
 
           <div class="inline-edit-footer">
@@ -39,46 +50,96 @@
             </p>
 
             <div class="btn-group">
-              <button type="submit" class="btn btn-primary" ng-disabled="!isValid(this.editAssigneeFrom, userTask)">
+              <button type="submit"
+                      class="btn btn-primary"
+                      ng-disabled="!isValid(this.editAssigneeForm, userTask)">
                 <i class="icon-ok icon-white"></i>
               </button>
-              <button type="button" class="btn" ng-click="closeInPlaceEditing(userTask)">
+              <button type="button"
+                      class="btn"
+                      ng-click="closeInPlaceAssigneeEditing(userTask)">
                 <i class="icon-ban-circle"></i>
               </button>
             </div>
           </div>
 
         </form>
+      </td>
 
+      <td class="owner">
+        <div ng-if="!userTask.inOwnerEditMode">
+          {{ userTask.owner }}
+          <span class="edit-toggle" ng-click="editOwner(userTask)">
+            <i class="icon-pencil"></i>
+          </span>
+        </div>
+
+        <form ng-if="userTask.inOwnerEditMode"
+              class="inline-edit"
+              name="editOwnerForm"
+              ng-submit="submitOwner(this.editOwnerForm, userTask)"
+              novalidate
+              request-aware>
+
+          <fieldset>
+            <input name="editOwner"
+                   type="text"
+                   class="in-place-edit"
+                   ng-model="getCopy(userTask.id).owner"
+                   autofocus
+                   required>
+          </fieldset>
+
+          <div class="inline-edit-footer">
+
+            <p class="invalid" ng-show="getExceptionForUserTask(userTask)">
+              The owner could not be changed: {{ getExceptionForUserTask(userTask).message }}.
+            </p>
+
+            <div class="btn-group">
+              <button type="submit"
+                      class="btn btn-primary"
+                      ng-disabled="!isValid(this.editOwnerForm, userTask)">
+                <i class="icon-ok icon-white"></i>
+              </button>
+              <button type="button"
+                      class="btn"
+                      ng-click="closeInPlaceOwnerEditing(userTask)">
+                <i class="icon-ban-circle"></i>
+              </button>
+            </div>
+          </div>
+
+        </form>
       </td>
-      <td>
-        {{ userTask.owner }}
-      </td>
-      <td>
+
+      <td class="created">
         {{ userTask.created }}
       </td>
-      <td>
+      <td class="due">
         {{ userTask.due }}
       </td>
-      <td>
+      <td class="priority">
         {{ userTask.priority }}
       </td>
-      <td>
+      <td class="delegation-state">
         {{ userTask.delegationState }}
       </td>
-      <td>
+      <td class="id">
         {{ userTask.id }}
       </td>
     </tr>
 
     <tr ng-if="!userTasks">
-      <td colspan="8">
+      <td class="tasks-loading"
+          colspan="8">
         <i class="icon-loading"></i> loading user tasks...
       </td>
     </tr>
 
     <tr ng-if="userTasks && !userTasks.length">
-      <td  colspan="8">
+      <td class="tasks-empty"
+          colspan="8">
         No user tasks
       </td>
     </tr>
