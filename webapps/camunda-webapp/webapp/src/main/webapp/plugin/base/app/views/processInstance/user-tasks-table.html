@@ -5,6 +5,7 @@
       <th>Activity</th>
       <th>Assignee</th>
       <th>Owner</th>
+      <th>Group</th>
       <th>Creation Date</th>
       <th>Due Date</th>
       <th>Priority</th>
@@ -66,7 +67,7 @@
         </form>
       </td>
 
-      <td class="owner">
+      <!-- <td class="owner">
         <div ng-if="!userTask.inOwnerEditMode">
           {{ userTask.owner }}
           <span class="edit-toggle" ng-click="editOwner(userTask)">
@@ -111,6 +112,56 @@
           </div>
 
         </form>
+      </td> -->
+      <td class="owner">
+        {{ userTask.owner }}
+      </td>
+
+      <td class="group">
+        <div ng-if="!userTask.inGroupEditMode">
+          {{ userTask.groupId }}
+          <span class="edit-toggle" ng-click="editGroup(userTask)">
+            <i class="icon-pencil"></i>
+          </span>
+        </div>
+
+        <form ng-if="userTask.inGroupEditMode"
+              class="inline-edit"
+              name="editGroupForm"
+              ng-submit="submitGroup(this.editGroupForm, userTask)"
+              novalidate
+              request-aware>
+
+          <fieldset>
+            <input name="editGroup"
+                   type="text"
+                   class="in-place-edit"
+                   ng-model="getCopy(userTask.id).group"
+                   autofocus
+                   required>
+          </fieldset>
+
+          <div class="inline-edit-footer">
+
+            <p class="invalid" ng-show="getExceptionForUserTask(userTask)">
+              The group could not be changed: {{ getExceptionForUserTask(userTask).message }}.
+            </p>
+
+            <div class="btn-group">
+              <button type="submit"
+                      class="btn btn-primary"
+                      ng-disabled="!isValid(this.editGroupForm, userTask)">
+                <i class="icon-ok icon-white"></i>
+              </button>
+              <button type="button"
+                      class="btn"
+                      ng-click="closeInPlaceGroupEditing(userTask)">
+                <i class="icon-ban-circle"></i>
+              </button>
+            </div>
+          </div>
+
+        </form>
       </td>
 
       <td class="created">
@@ -132,14 +183,14 @@
 
     <tr ng-if="!userTasks">
       <td class="tasks-loading"
-          colspan="8">
+          colspan="9">
         <i class="icon-loading"></i> loading user tasks...
       </td>
     </tr>
 
     <tr ng-if="userTasks && !userTasks.length">
       <td class="tasks-empty"
-          colspan="8">
+          colspan="9">
         No user tasks
       </td>
     </tr>

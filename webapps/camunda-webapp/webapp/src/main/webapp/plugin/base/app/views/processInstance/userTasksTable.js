@@ -164,8 +164,61 @@ ngDefine('cockpit.plugin.base.views', function(module) {
     }
 
     delegationForm('assignee');
-    delegationForm('owner');
+    // delegationForm('owner');
 
+
+
+
+    $scope.editGroup = function(userTask) {
+      userTask.inGroupEditLoading = true;
+      userTask.inGroupEditMode = true;
+
+      var copy = taskCopies[userTask.id],
+          defaultParams = {id: userTask.id},
+          params = {userId : copy.groupId};
+
+      TaskResource.getIdentityLinks(defaultParams, params).$then(
+        // success callback
+        function(response) {
+          delete userTask.inGroupEditLoading;
+
+          userTask.inGroupEditMode = true;
+
+          console.info('loaded identity links', response);
+        },
+        // error callback
+        function(error) {
+          delete userTask.inGroupEditLoading;
+
+          delete userTask.inGroupEditMode;
+        }
+      );
+    };
+
+    $scope.closeInPlaceGroupEditing = function(userTask) {
+      delete userTask.inGroupEditMode;
+
+      // clear the exception for the passed user task
+      taskIdIdToExceptionMessageMap[userTask.id] = null;
+
+      // reset the values of the copy
+      var copy = taskCopies[userTask.id];
+      angular.extend(copy, userTask);
+    };
+
+    $scope.submitGroup = function(editForm, userTask) {
+      if (!isValid(editForm)) {
+        return;
+      }
+
+      function addCall() {
+
+      }
+
+      // check if there's a value, in which case it has to be removed first
+
+      // add the (new) value
+    };
 
 
 
